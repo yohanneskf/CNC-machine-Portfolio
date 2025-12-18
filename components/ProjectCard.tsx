@@ -22,18 +22,19 @@ export default function ProjectCard({ project, language }: ProjectCardProps) {
   const title = language === "en" ? project.titleEn : project.titleAm;
   const description =
     language === "en"
-      ? project.descriptionEn.substring(0, 100) + "..."
-      : project.descriptionAm.substring(0, 100) + "...";
+      ? (project.descriptionEn?.substring(0, 100) || "") + "..."
+      : (project.descriptionAm?.substring(0, 100) || "") + "...";
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       <div className="relative h-64 overflow-hidden">
-        {project.images[0] ? (
+        {project.images && project.images[0] ? (
           <Image
             src={project.images[0]}
             alt={title}
             fill
             className="object-cover hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-blue-100 to-gray-100 flex items-center justify-center">
@@ -65,11 +66,12 @@ export default function ProjectCard({ project, language }: ProjectCardProps) {
           )}
         </div>
 
+        {/* THIS IS THE CRITICAL LINK */}
         <Link
           href={`/projects/${project.id}`}
           className="inline-flex items-center justify-center w-full bg-gray-900 hover:bg-black text-white px-4 py-3 rounded-lg font-semibold transition-colors"
         >
-          View Details
+          {language === "en" ? "View Details" : "ዝርዝሮችን ይመልከቱ"}
           <FiExternalLink className="ml-2 h-4 w-4" />
         </Link>
       </div>
