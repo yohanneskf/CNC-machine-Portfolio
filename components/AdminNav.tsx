@@ -16,9 +16,14 @@ import {
 interface AdminNavProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onLogout?: () => void;
 }
 
-export default function AdminNav({ activeTab, setActiveTab }: AdminNavProps) {
+export default function AdminNav({
+  activeTab,
+  setActiveTab,
+  onLogout,
+}: AdminNavProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -29,8 +34,14 @@ export default function AdminNav({ activeTab, setActiveTab }: AdminNavProps) {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("admin_token");
-    router.push("/admin/login");
+    if (onLogout) {
+      onLogout();
+    } else {
+      localStorage.removeItem("admin_token");
+      document.cookie =
+        "admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      router.push("/admin/login");
+    }
   };
 
   return (

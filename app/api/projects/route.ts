@@ -5,11 +5,29 @@ export async function GET() {
   try {
     const projects = await prisma.project.findMany({
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        titleEn: true,
+        titleAm: true,
+        descriptionEn: true,
+        descriptionAm: true,
+        category: true,
+        materials: true,
+        images: true,
+        featured: true,
+        dimensions: true,
+        createdAt: true,
+      },
     });
+
     return NextResponse.json(projects);
   } catch (error) {
+    console.error("Error fetching projects:", error);
     return NextResponse.json(
-      { error: "Error fetching projects" },
+      {
+        error: "Error fetching projects",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
