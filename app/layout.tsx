@@ -43,7 +43,6 @@ export default function RootLayout({
       >
         <LanguageProvider>
           <div className="min-h-screen flex flex-col bg-[#fcfcfc]">
-            {/* DYNAMIC NAVBAR LOGIC */}
             {isAdmin ? (
               <AdminNav
                 activeTab={activeTab}
@@ -67,7 +66,6 @@ export default function RootLayout({
               </motion.main>
             </AnimatePresence>
 
-            {/* Optionally hide footer on Admin pages for a cleaner dashboard look */}
             {!isAdmin && <Footer />}
           </div>
         </LanguageProvider>
