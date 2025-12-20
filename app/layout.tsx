@@ -9,6 +9,7 @@ import AdminNav from "@/components/AdminNav"; // Import AdminNav
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { EdgeStoreProvider } from "../lib/edgestore";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -63,7 +64,7 @@ export default function RootLayout({
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="flex-grow pt-16"
               >
-                {children}
+                <EdgeStoreProvider>{children}</EdgeStoreProvider>
               </motion.main>
             </AnimatePresence>
 
