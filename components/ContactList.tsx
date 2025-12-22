@@ -48,11 +48,11 @@ export default function ContactList({
     useState<Submission | null>(null);
   const [submissionToPurge, setSubmissionToPurge] = useState<Submission | null>(
     null
-  );
-  const [isDeleting, setIsDeleting] = useState(false);
+  ); // State for professional delete
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleDownload = async (url: string) => {
     try {
@@ -72,14 +72,14 @@ export default function ContactList({
 
   const executePurge = async () => {
     if (!submissionToPurge || !onDelete) return;
-    setIsDeleting(true);
+    setIsProcessing(true);
     try {
       await onDelete(submissionToPurge.id);
       setSubmissionToPurge(null);
     } catch (e) {
-      console.error("Purge failed");
+      console.error("Purge failed", e);
     } finally {
-      setIsDeleting(false);
+      setIsProcessing(false);
     }
   };
 
@@ -175,54 +175,55 @@ export default function ContactList({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => !isDeleting && setSubmissionToPurge(null)}
               className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+              onClick={() => !isProcessing && setSubmissionToPurge(null)}
             />
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-md bg-[#0a0a0b] border border-red-500/30 overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.1)]"
+              className="relative w-full max-w-md bg-[#080a0f] border border-red-500/30 overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.1)]"
             >
               <div className="bg-red-500/10 p-4 border-b border-red-500/20 flex items-center gap-3">
                 <FiAlertTriangle className="text-red-500 animate-pulse" />
                 <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">
-                  Security_Warning // Data_Purge
+                  Security_Warning // Inquiry_Purge
                 </span>
               </div>
 
               <div className="p-8 text-center">
-                <p className="text-gray-500 text-[11px] uppercase tracking-widest mb-6 leading-relaxed">
-                  You are about to initiate{" "}
+                <p className="text-gray-400 text-[11px] uppercase tracking-widest mb-6 leading-relaxed">
+                  Initiating{" "}
                   <span className="text-white">Permanent_Erasure</span> of
                   inquiry from:
                   <br />
-                  <span className="text-amber-500 font-bold">
-                    [{submissionToPurge.name}]
+                  <span className="text-amber-500 font-bold text-sm block mt-2">
+                    [{submissionToPurge.name.toUpperCase()}]
                   </span>
                 </p>
 
                 <div className="bg-white/[0.02] border border-white/5 p-4 mb-8">
                   <p className="text-[9px] text-gray-600 uppercase tracking-tighter">
-                    System Alert: This action scrubbs all metadata and visual
-                    payloads from the database. Recovery is impossible.
+                    Warning: This operation will scrub all technical briefs and
+                    visual schematics from the active database. This cannot be
+                    undone.
                   </p>
                 </div>
 
                 <div className="flex gap-4">
                   <button
                     onClick={() => setSubmissionToPurge(null)}
-                    disabled={isDeleting}
+                    disabled={isProcessing}
                     className="flex-1 py-3 border border-white/10 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
                   >
-                    Abort_Protocol
+                    Abort_Mission
                   </button>
                   <button
                     onClick={executePurge}
-                    disabled={isDeleting}
-                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(220,38,38,0.2)]"
+                    disabled={isProcessing}
+                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                   >
-                    {isDeleting ? (
+                    {isProcessing ? (
                       <FiLoader className="animate-spin" />
                     ) : (
                       <>
@@ -238,7 +239,7 @@ export default function ContactList({
         )}
       </AnimatePresence>
 
-      {/* 3. Detail Modal (Full Info Restored) */}
+      {/* 3. Detail Modal (Information Restored) */}
       <AnimatePresence>
         {selectedSubmission && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -254,7 +255,6 @@ export default function ContactList({
               animate={{ scale: 1, opacity: 1 }}
               className="relative w-full max-w-6xl bg-[#080a0f] border border-amber-500/20 overflow-hidden shadow-2xl"
             >
-              {/* Modal Header */}
               <div className="flex justify-between items-center p-6 border-b border-white/5 bg-amber-500/[0.02]">
                 <div className="flex items-center gap-4">
                   <FiCpu className="text-amber-500" />
@@ -267,14 +267,13 @@ export default function ContactList({
                 </div>
                 <button
                   onClick={() => setSelectedSubmission(null)}
-                  className="text-gray-500 hover:text-white"
+                  className="text-gray-500 hover:text-white transition-colors"
                 >
                   <FiX size={24} />
                 </button>
               </div>
 
               <div className="p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 max-h-[85vh] overflow-y-auto">
-                {/* LEFT COLUMN: Metadata & Description */}
                 <div className="lg:col-span-7 space-y-8">
                   <section>
                     <h4 className="text-[9px] font-black text-amber-500 uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
@@ -330,7 +329,6 @@ export default function ContactList({
                   </section>
                 </div>
 
-                {/* RIGHT COLUMN: Visual Payload */}
                 <div className="lg:col-span-5 space-y-6">
                   <h4 className="text-[9px] font-black text-amber-500 uppercase tracking-[0.4em]">
                     Visual_Schematics
@@ -343,32 +341,29 @@ export default function ContactList({
                           className="w-full h-full object-contain grayscale hover:grayscale-0 transition-all duration-500 cursor-zoom-in"
                           onClick={() => setIsZoomed(true)}
                         />
-                        {/* Navigation controls for multiple images */}
                         {selectedSubmission.images.length > 1 && (
-                          <div className="absolute inset-y-0 w-full flex justify-between items-center px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
+                              onClick={() =>
                                 setCurrentImageIndex((prev) =>
                                   prev > 0
                                     ? prev - 1
                                     : selectedSubmission.images!.length - 1
-                                );
-                              }}
-                              className="p-2 bg-black/50 text-white hover:bg-amber-500 transition-colors"
+                                )
+                              }
+                              className="p-2 bg-black/80 border border-white/10 text-white hover:text-amber-500"
                             >
                               <FiChevronLeft />
                             </button>
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentImageIndex(
-                                  (prev) =>
-                                    (prev + 1) %
-                                    selectedSubmission.images!.length
-                                );
-                              }}
-                              className="p-2 bg-black/50 text-white hover:bg-amber-500 transition-colors"
+                              onClick={() =>
+                                setCurrentImageIndex((prev) =>
+                                  prev < selectedSubmission.images!.length - 1
+                                    ? prev + 1
+                                    : 0
+                                )
+                              }
+                              className="p-2 bg-black/80 border border-white/10 text-white hover:text-amber-500"
                             >
                               <FiChevronRight />
                             </button>
@@ -381,7 +376,7 @@ export default function ContactList({
                             selectedSubmission.images![currentImageIndex]
                           )
                         }
-                        className="w-full py-4 bg-amber-600 text-[9px] font-black uppercase tracking-widest text-black hover:bg-amber-500 transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-amber-600 text-[9px] font-black uppercase tracking-widest text-black hover:bg-amber-500 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
                       >
                         <FiDownload /> Export_Data_Packet
                       </button>
@@ -415,7 +410,7 @@ export default function ContactList({
               src={selectedSubmission.images[currentImageIndex]}
               className="max-w-full max-h-full object-contain"
             />
-            <button className="absolute top-10 right-10 text-white/50 hover:text-white transition-colors">
+            <button className="absolute top-10 right-10 text-white/50 hover:text-white transition-all">
               <FiX size={40} />
             </button>
           </motion.div>
