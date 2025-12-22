@@ -48,12 +48,13 @@ export default function ContactList({
     useState<Submission | null>(null);
   const [submissionToPurge, setSubmissionToPurge] = useState<Submission | null>(
     null
-  ); // State for professional delete
+  );
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // --- PROTOCOL: DOWNLOAD PACKET ---
   const handleDownload = async (url: string) => {
     try {
       const response = await fetch(url);
@@ -70,10 +71,13 @@ export default function ContactList({
     }
   };
 
+  // --- PROTOCOL: EXECUTE PURGE (NO BROWSER CONFIRM) ---
   const executePurge = async () => {
     if (!submissionToPurge || !onDelete) return;
     setIsProcessing(true);
     try {
+      // We call the parent onDelete directly.
+      // Ensure the parent function does NOT have a confirm() inside it.
       await onDelete(submissionToPurge.id);
       setSubmissionToPurge(null);
     } catch (e) {
@@ -90,7 +94,7 @@ export default function ContactList({
 
   return (
     <div className="space-y-6 font-mono selection:bg-amber-500/30">
-      {/* 1. Header with Activity Monitor */}
+      {/* Activity Monitor Header */}
       <div className="bg-[#05070a] border border-white/5 p-6 relative overflow-hidden">
         <div className="flex justify-between items-center relative z-10">
           <div className="flex items-center gap-4">
@@ -109,7 +113,7 @@ export default function ContactList({
         </div>
       </div>
 
-      {/* 2. Data Table */}
+      {/* Data Table */}
       <div className="bg-[#05070a] border border-white/5 overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-white/[0.02] border-b border-white/5">
@@ -203,10 +207,9 @@ export default function ContactList({
                 </p>
 
                 <div className="bg-white/[0.02] border border-white/5 p-4 mb-8">
-                  <p className="text-[9px] text-gray-600 uppercase tracking-tighter">
-                    Warning: This operation will scrub all technical briefs and
-                    visual schematics from the active database. This cannot be
-                    undone.
+                  <p className="text-[9px] text-gray-600 uppercase tracking-tighter italic">
+                    Note: This bypasses standard recovery protocols. Data scrub
+                    will be instantaneous.
                   </p>
                 </div>
 
@@ -221,7 +224,7 @@ export default function ContactList({
                   <button
                     onClick={executePurge}
                     disabled={isProcessing}
-                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-red-900/40 hover:bg-red-600 text-white border border-red-500/50 text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                   >
                     {isProcessing ? (
                       <FiLoader className="animate-spin" />
@@ -233,13 +236,12 @@ export default function ContactList({
                   </button>
                 </div>
               </div>
-              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-500/20" />
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* 3. Detail Modal (Information Restored) */}
+      {/* Detail Modal (Standard View) */}
       <AnimatePresence>
         {selectedSubmission && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -274,6 +276,7 @@ export default function ContactList({
               </div>
 
               <div className="p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 max-h-[85vh] overflow-y-auto">
+                {/* Metadata Column */}
                 <div className="lg:col-span-7 space-y-8">
                   <section>
                     <h4 className="text-[9px] font-black text-amber-500 uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
@@ -329,6 +332,7 @@ export default function ContactList({
                   </section>
                 </div>
 
+                {/* Visual Column */}
                 <div className="lg:col-span-5 space-y-6">
                   <h4 className="text-[9px] font-black text-amber-500 uppercase tracking-[0.4em]">
                     Visual_Schematics
@@ -341,34 +345,6 @@ export default function ContactList({
                           className="w-full h-full object-contain grayscale hover:grayscale-0 transition-all duration-500 cursor-zoom-in"
                           onClick={() => setIsZoomed(true)}
                         />
-                        {selectedSubmission.images.length > 1 && (
-                          <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() =>
-                                setCurrentImageIndex((prev) =>
-                                  prev > 0
-                                    ? prev - 1
-                                    : selectedSubmission.images!.length - 1
-                                )
-                              }
-                              className="p-2 bg-black/80 border border-white/10 text-white hover:text-amber-500"
-                            >
-                              <FiChevronLeft />
-                            </button>
-                            <button
-                              onClick={() =>
-                                setCurrentImageIndex((prev) =>
-                                  prev < selectedSubmission.images!.length - 1
-                                    ? prev + 1
-                                    : 0
-                                )
-                              }
-                              className="p-2 bg-black/80 border border-white/10 text-white hover:text-amber-500"
-                            >
-                              <FiChevronRight />
-                            </button>
-                          </div>
-                        )}
                       </div>
                       <button
                         onClick={() =>
@@ -376,7 +352,7 @@ export default function ContactList({
                             selectedSubmission.images![currentImageIndex]
                           )
                         }
-                        className="w-full py-4 bg-amber-600 text-[9px] font-black uppercase tracking-widest text-black hover:bg-amber-500 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                        className="w-full py-4 bg-amber-600 text-[9px] font-black uppercase tracking-widest text-black hover:bg-amber-500 transition-all flex items-center justify-center gap-2"
                       >
                         <FiDownload /> Export_Data_Packet
                       </button>
@@ -396,7 +372,7 @@ export default function ContactList({
         )}
       </AnimatePresence>
 
-      {/* Full-Screen Zoom Overlay */}
+      {/* Zoom Overlay */}
       <AnimatePresence>
         {isZoomed && selectedSubmission?.images && (
           <motion.div

@@ -132,7 +132,6 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteSubmission = async (id: string) => {
-    if (!confirm("CONFIRM_PERMANENT_ERASURE?")) return;
     const token = localStorage.getItem("admin_token");
     try {
       const res = await fetch(`/api/contact?id=${id}`, {
