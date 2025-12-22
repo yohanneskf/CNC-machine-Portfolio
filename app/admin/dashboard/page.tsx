@@ -272,7 +272,6 @@ export default function AdminDashboard() {
             <ContactList
               submissions={submissions}
               onDelete={handleDeleteSubmission}
-              onUpdate={handleUpdate}
             />
           </motion.div>
         );
