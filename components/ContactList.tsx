@@ -16,7 +16,8 @@ import {
   FiUsers,
   FiGlobe,
   FiDownload,
-  FiMaximize2,
+  FiAlertTriangle,
+  FiLoader,
 } from "react-icons/fi";
 
 interface Submission {
@@ -45,6 +46,10 @@ export default function ContactList({
 }: ContactListProps) {
   const [selectedSubmission, setSelectedSubmission] =
     useState<Submission | null>(null);
+  const [submissionToPurge, setSubmissionToPurge] = useState<Submission | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -62,6 +67,19 @@ export default function ContactList({
       document.body.removeChild(link);
     } catch (e) {
       console.error("Download failed", e);
+    }
+  };
+
+  const executePurge = async () => {
+    if (!submissionToPurge || !onDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(submissionToPurge.id);
+      setSubmissionToPurge(null);
+    } catch (e) {
+      console.error("Purge failed");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -136,7 +154,7 @@ export default function ContactList({
                       <FiEye />
                     </button>
                     <button
-                      onClick={() => onDelete?.(sub.id)}
+                      onClick={() => setSubmissionToPurge(sub)}
                       className="p-2 border border-white/10 hover:border-red-500 text-gray-500 hover:text-red-500 transition-all"
                     >
                       <FiTrash2 />
@@ -148,6 +166,77 @@ export default function ContactList({
           </tbody>
         </table>
       </div>
+
+      {/* --- PROFESSIONAL PURGE PROTOCOL MODAL --- */}
+      <AnimatePresence>
+        {submissionToPurge && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isDeleting && setSubmissionToPurge(null)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-md bg-[#0a0a0b] border border-red-500/30 overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.1)]"
+            >
+              <div className="bg-red-500/10 p-4 border-b border-red-500/20 flex items-center gap-3">
+                <FiAlertTriangle className="text-red-500 animate-pulse" />
+                <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">
+                  Security_Warning // Data_Purge
+                </span>
+              </div>
+
+              <div className="p-8 text-center">
+                <p className="text-gray-500 text-[11px] uppercase tracking-widest mb-6 leading-relaxed">
+                  You are about to initiate{" "}
+                  <span className="text-white">Permanent_Erasure</span> of
+                  inquiry from:
+                  <br />
+                  <span className="text-amber-500 font-bold">
+                    [{submissionToPurge.name}]
+                  </span>
+                </p>
+
+                <div className="bg-white/[0.02] border border-white/5 p-4 mb-8">
+                  <p className="text-[9px] text-gray-600 uppercase tracking-tighter">
+                    System Alert: This action scrubbs all metadata and visual
+                    payloads from the database. Recovery is impossible.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setSubmissionToPurge(null)}
+                    disabled={isDeleting}
+                    className="flex-1 py-3 border border-white/10 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Abort_Protocol
+                  </button>
+                  <button
+                    onClick={executePurge}
+                    disabled={isDeleting}
+                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(220,38,38,0.2)]"
+                  >
+                    {isDeleting ? (
+                      <FiLoader className="animate-spin" />
+                    ) : (
+                      <>
+                        <FiTrash2 /> Confirm_Purge
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-500/20" />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* 3. Detail Modal (Full Info Restored) */}
       <AnimatePresence>
@@ -254,7 +343,37 @@ export default function ContactList({
                           className="w-full h-full object-contain grayscale hover:grayscale-0 transition-all duration-500 cursor-zoom-in"
                           onClick={() => setIsZoomed(true)}
                         />
-                        {/* Internal Navigation & Zoom buttons here (already in your code) */}
+                        {/* Navigation controls for multiple images */}
+                        {selectedSubmission.images.length > 1 && (
+                          <div className="absolute inset-y-0 w-full flex justify-between items-center px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentImageIndex((prev) =>
+                                  prev > 0
+                                    ? prev - 1
+                                    : selectedSubmission.images!.length - 1
+                                );
+                              }}
+                              className="p-2 bg-black/50 text-white hover:bg-amber-500 transition-colors"
+                            >
+                              <FiChevronLeft />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentImageIndex(
+                                  (prev) =>
+                                    (prev + 1) %
+                                    selectedSubmission.images!.length
+                                );
+                              }}
+                              className="p-2 bg-black/50 text-white hover:bg-amber-500 transition-colors"
+                            >
+                              <FiChevronRight />
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() =>
@@ -282,7 +401,7 @@ export default function ContactList({
         )}
       </AnimatePresence>
 
-      {/* Full-Screen Zoom Overlay (already in your code) */}
+      {/* Full-Screen Zoom Overlay */}
       <AnimatePresence>
         {isZoomed && selectedSubmission?.images && (
           <motion.div
