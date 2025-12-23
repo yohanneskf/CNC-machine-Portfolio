@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -34,7 +34,22 @@ export default function AdminNav({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null); // Ref for click-outside
   const router = useRouter();
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowProfileMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const navItems = [
     { id: "projects", label: "Catalog_Module", icon: <FiGrid />, code: "01" },
@@ -72,7 +87,6 @@ export default function AdminNav({
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <div className="flex items-center gap-4 lg:gap-12">
-              {/* MOBILE TOGGLE BUTTON (FIXED) */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="lg:hidden p-3 bg-white/5 border border-white/10 text-blue-500 hover:bg-blue-500/10 transition-all"
@@ -80,7 +94,6 @@ export default function AdminNav({
                 {isMobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
               </button>
 
-              {/* BRANDING */}
               <Link
                 href="/admin/dashboard"
                 className="flex items-center gap-3 group"
@@ -100,7 +113,6 @@ export default function AdminNav({
                 </div>
               </Link>
 
-              {/* DESKTOP NAV */}
               <div className="hidden lg:flex items-center space-x-1">
                 {navItems.map((item) => (
                   <button
@@ -138,9 +150,7 @@ export default function AdminNav({
               </div>
             </div>
 
-            {/* UTILS */}
             <div className="flex items-center gap-2 lg:gap-4">
-              {/* NOTIFICATION TERMINAL */}
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className={`p-3 border hidden xs:block transition-all ${
@@ -152,11 +162,18 @@ export default function AdminNav({
                 <FiTerminal className="h-4 w-4" />
               </button>
 
-              {/* AUTH USER */}
-              <div className="relative">
+              {/* ROOT BUTTON MODULE (STABILIZED) */}
+              <div className="relative" ref={profileMenuRef}>
                 <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center gap-3 p-1.5 lg:pr-4 bg-white/5 border border-white/5 hover:border-blue-500/30 transition-all"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowProfileMenu(!showProfileMenu);
+                  }}
+                  className={`flex items-center gap-3 p-1.5 lg:pr-4 bg-white/5 border transition-all ${
+                    showProfileMenu
+                      ? "border-blue-500 bg-blue-500/10"
+                      : "border-white/5 hover:border-blue-500/30"
+                  }`}
                 >
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 flex items-center justify-center">
                     <FiShield className="text-white" />
@@ -170,8 +187,8 @@ export default function AdminNav({
                     </p>
                   </div>
                   <FiChevronDown
-                    className={`h-3 w-3 text-gray-600 transition-transform ${
-                      showProfileMenu ? "rotate-180" : ""
+                    className={`h-3 w-3 text-gray-600 transition-transform duration-300 ${
+                      showProfileMenu ? "rotate-180 text-blue-500" : ""
                     }`}
                   />
                 </button>
@@ -179,18 +196,19 @@ export default function AdminNav({
                 <AnimatePresence>
                   {showProfileMenu && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-48 bg-[#0a0a0b] border border-white/10 shadow-2xl z-[80]"
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-3 w-48 bg-[#0a0a0b] border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-[80] overflow-hidden"
                     >
                       <div className="p-1 space-y-1">
                         <Link
                           href="/"
                           target="_blank"
-                          className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-white hover:bg-white/5 transition-all"
+                          className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                          onClick={() => setShowProfileMenu(false)}
                         >
-                          <FiExternalLink size={12} />
+                          <FiExternalLink size={12} className="text-blue-500" />
                           <span className="text-[9px] font-black uppercase tracking-widest">
                             Public_View
                           </span>
@@ -215,7 +233,7 @@ export default function AdminNav({
         </div>
       </nav>
 
-      {/* MOBILE MENU OVERLAY */}
+      {/* MOBILE MENU OVERLAY (SYNCED WITH ROOT ACTIONS) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -234,12 +252,6 @@ export default function AdminNav({
               className="fixed top-0 left-0 bottom-0 w-[80%] max-w-xs bg-[#030712] border-r border-white/10 z-[60] lg:hidden p-6 pt-24"
             >
               <div className="space-y-3">
-                <div className="px-4 py-2 mb-6 border-l-2 border-blue-500 bg-blue-500/5">
-                  <span className="text-[8px] font-mono text-blue-500 uppercase tracking-widest flex items-center gap-2">
-                    <FiActivity className="animate-pulse" /> System_Navigation
-                  </span>
-                </div>
-
                 {navItems.map((item) => (
                   <button
                     key={item.id}
@@ -265,7 +277,17 @@ export default function AdminNav({
                   </button>
                 ))}
 
-                <div className="pt-8 mt-8 border-t border-white/5">
+                <div className="pt-8 mt-8 border-t border-white/5 space-y-3">
+                  <Link
+                    href="/"
+                    target="_blank"
+                    className="w-full flex items-center gap-4 p-4 text-gray-400 border border-white/5 hover:bg-white/5 transition-all"
+                  >
+                    <FiExternalLink />
+                    <span className="font-black uppercase tracking-widest text-[10px]">
+                      Public_Interface
+                    </span>
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-4 p-4 text-red-500 border border-red-500/10 hover:bg-red-500/5 transition-all"
@@ -275,26 +297,6 @@ export default function AdminNav({
                       System_Exit
                     </span>
                   </button>
-                </div>
-              </div>
-
-              <div className="absolute bottom-6 left-6 right-6">
-                <div className="p-4 bg-white/[0.02] border border-white/5">
-                  <p className="text-[7px] font-mono text-gray-600 uppercase">
-                    Hardware_Status:{" "}
-                    <span className="text-green-500">Nominal</span>
-                  </p>
-                  <div className="w-full h-1 bg-white/5 mt-2 overflow-hidden">
-                    <motion.div
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 2,
-                        ease: "linear",
-                      }}
-                      className="w-1/2 h-full bg-blue-500/20"
-                    />
-                  </div>
                 </div>
               </div>
             </motion.div>
