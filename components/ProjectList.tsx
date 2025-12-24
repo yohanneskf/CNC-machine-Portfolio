@@ -510,3 +510,4 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
     </div>
   );
 }
+// End of file
